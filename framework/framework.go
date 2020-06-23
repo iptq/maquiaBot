@@ -142,7 +142,6 @@ func (f *Framework) handleMessageCreate(s *discordgo.Session, m *discordgo.Messa
 
 func (f *Framework) getServer(guildID string) (*models.Server, error) {
 	var server models.Server
-	fmt.Println("looking up server", guildID)
 	err := f.serverCollection.
 		FindOne(context.TODO(), bson.M{"server_id": guildID}).
 		Decode(&server)

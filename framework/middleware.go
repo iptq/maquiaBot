@@ -1,7 +1,6 @@
 package framework
 
 import (
-	"fmt"
 	"reflect"
 	"regexp"
 
@@ -54,7 +53,6 @@ func Wrap(inner Middleware, regex string) _Wrap {
 
 	// look for a Help function
 	if m, ok := lookForHelpFunc(reflect.ValueOf(inner), reflect.TypeOf(inner)); ok {
-		fmt.Println("it's valid")
 		w.helpFunc = m
 	}
 	return w

@@ -41,7 +41,7 @@ func Recent() _Recent {
 
 func (m _Recent) Help(embed *discordgo.MessageEmbed) {
 	embed.Author.Name = "Command: r / rs / recent"
-	embed.Description = "`[osu] (r|rs|recent) [osu! username] [num] [-m mod] [-sp [-mapper] [-sr]]` shows the player's recent score."
+	embed.Description = "`(r|rs|recent) [osu! username] [num] [-m mod] [-sp [-mapper] [-sr]]` shows the player's recent score."
 	embed.Fields = []*discordgo.MessageEmbedField{
 		{
 			Name:   "[osu! username]",
@@ -81,10 +81,62 @@ func (m _Recent) Help(embed *discordgo.MessageEmbed) {
 }
 
 func (m _Recent) Handle(ctx *framework.CommandContext) int {
-	return handle(ctx, "recent")
+	return handleRecent(ctx, "recent")
 }
 
-func handle(ctx *framework.CommandContext, option string) int {
+type _RecentBest struct {
+}
+
+func RecentBest() _RecentBest {
+	return _RecentBest{}
+}
+
+func (m _RecentBest) Help(embed *discordgo.MessageEmbed) {
+	embed.Author.Name = "Command: rb / recentb / recentbest"
+	embed.Description = "`(rb|recentb|recentbest) [osu! username] [num] [-m mod] [-sp [-mapper] [-sr]]` shows the player's recent top 100 pp score."
+	embed.Fields = []*discordgo.MessageEmbedField{
+		{
+			Name:   "[osu! username]",
+			Value:  "The osu! user to check. No user given will use the account linked to your discord account.",
+			Inline: true,
+		},
+		{
+			Name:   "[num]",
+			Value:  "The nth recent top score to find (Default: Latest).",
+			Inline: true,
+		},
+		{
+			Name:   "[-m mod]",
+			Value:  "The mods to check for.",
+			Inline: true,
+		},
+		{
+			Name:   "[-sp]",
+			Value:  "Print out the score in a scorepost format after.",
+			Inline: true,
+		},
+		{
+			Name:   "[-mapper]",
+			Value:  "Remove the mapset host from the scorepost generation.",
+			Inline: true,
+		},
+		{
+			Name:   "[-sr]",
+			Value:  "Remove the star rating from the scorepost generation.",
+			Inline: true,
+		},
+		{
+			Name:  "Related Commands:",
+			Value: "`recentbest`",
+		},
+	}
+}
+
+func (m _RecentBest) Handle(ctx *framework.CommandContext) int {
+	return handleRecent(ctx, "best")
+}
+
+func handleRecent(ctx *framework.CommandContext, option string) int {
 	username := ""
 	mods := ""
 	index := 1
@@ -133,7 +185,6 @@ func handle(ctx *framework.CommandContext, option string) int {
 	// If not, find the user's name and return it
 	var userP *osuapi.User
 	var err error
-	fmt.Println("USERNAME", username)
 	if len(username) == 0 {
 		player, err := ctx.GetOsuProfile()
 		if err != nil {
