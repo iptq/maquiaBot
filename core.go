@@ -15,7 +15,7 @@ import (
 	"syscall"
 	"time"
 
-	"maquiaBot/commands"
+	c "maquiaBot/commands"
 	config "maquiaBot/config"
 	"maquiaBot/framework"
 	gencommands "maquiaBot/handlers/general-commands"
@@ -115,9 +115,27 @@ func main() {
 	// Handle farm data
 	go osutools.FarmUpdate(discord)
 
+	// fuck golang
+	wrap := func(m framework.Middleware, r string) framework.Command {
+		return framework.Wrap(m, r)
+	}
+	chain := func(base framework.Middleware, ms ...framework.Middleware) framework.Middleware {
+		for _, m := range ms {
+			base = framework.Chain(base, m)
+		}
+		return base
+	}
+
 	// Initialize the framework for handling events
 	f := framework.NewFramework(db, osuAPI, discord)
-	f.RegisterCommand("set", framework.Wrap(framework.Chain(commands.IsServerAdmin(false), commands.Link()), "^(link|set)"))
+
+	// general commands
+	f.RegisterCommand("color", wrap(c.Color(), "^(color|colour)"))
+	f.RegisterCommand("info", wrap(chain(c.IsServerAdmin(false), c.Info()), "^info"))
+
+	// osu commands
+	f.RegisterCommand("set", wrap(chain(c.IsServerAdmin(false), c.Link()), "^(link|set)"))
+	f.RegisterCommand("profile", wrap(c.Profile(), "^(osu|profile)"))
 
 	// Add handlers
 	// discord.AddHandler(handlers.MessageHandler)

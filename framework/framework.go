@@ -91,7 +91,11 @@ func (f *Framework) handleMessageCreate(s *discordgo.Session, m *discordgo.Messa
 					// are we looking for help?
 					if help {
 						embed := &discordgo.MessageEmbed{
-							Author: &discordgo.MessageEmbedAuthor{},
+							Author: &discordgo.MessageEmbedAuthor{
+								URL:     "https://discordapp.com/oauth2/authorize?&client_id=" + s.State.User.ID + "&scope=bot&permissions=0",
+								Name:    "Click here to invite MaquiaBot!",
+								IconURL: s.State.User.AvatarURL("2048"),
+							},
 						}
 						command.Help(embed)
 						fmt.Println("embed", embed)
