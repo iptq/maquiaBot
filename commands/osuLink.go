@@ -11,6 +11,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -80,6 +81,7 @@ func (m _Link) Handle(ctx *framework.CommandContext) int {
 		}
 		osuUsername = user.Username
 		player := models.Player{
+			ID:      primitive.NewObjectID(),
 			Osu:     *user,
 			Discord: *discordUser,
 		}
