@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"fmt"
 	"maquiaBot/framework"
 	"maquiaBot/models"
 	osuapi "maquiaBot/osu-api"
@@ -63,7 +64,9 @@ func (m _Link) Handle(ctx *framework.CommandContext) int {
 	// Find the user corresponding to the requesting dicord user
 	var player models.Player
 	err := ctx.Players.
-		FindOne(context.TODO(), bson.M{"discord_id": discordUser.ID}).
+		FindOne(context.TODO(), bson.D{
+			{"discord.id", discordUser.ID},
+		}).
 		Decode(&player)
 
 	// no players found
@@ -76,6 +79,7 @@ func (m _Link) Handle(ctx *framework.CommandContext) int {
 			ctx.Reply("Player: **%s** may not exist!", osuUsername)
 			return framework.MIDDLEWARE_RESPONSE_ERR
 		}
+		osuUsername = user.Username
 		player := models.Player{
 			Osu:     *user,
 			Discord: *discordUser,
@@ -87,8 +91,7 @@ func (m _Link) Handle(ctx *framework.CommandContext) int {
 		// Save player to mongo
 		_, err = ctx.Players.InsertOne(context.TODO(), player)
 		if err != nil {
-			evt := sentry.CaptureException(err)
-			ctx.Reply("couldn't update user in database: %+v", evt)
+			ctx.ReplyErr(err, "couldn't update user in database")
 			return framework.MIDDLEWARE_RESPONSE_ERR
 		}
 
@@ -125,14 +128,23 @@ func (m _Link) Handle(ctx *framework.CommandContext) int {
 		ctx.Reply("Player: **%s** may not exist!", osuUsername)
 		return framework.MIDDLEWARE_RESPONSE_ERR
 	}
+	fmt.Printf("NEW USER: %+v\n", user)
+	osuUsername = user.Username
 	player.Osu = *user
 	player.FarmCalc(ctx.Osu, ctx.Farm)
 
 	// commit player back to mongo
-	_, err = ctx.Players.UpdateOne(context.TODO(), bson.M{"discord_id": discordUser.ID}, &player)
+	upd := bson.M{"$set": player}
+	upds, _ := bson.MarshalExtJSON(upd, true, false)
+	fmt.Printf("UPDATE: %+v\n", string(upds))
+
+	_, err = ctx.Players.ReplaceOne(
+		context.TODO(),
+		bson.M{"_id": player.ID},
+		&player,
+	)
 	if err != nil {
-		evt := sentry.CaptureException(err)
-		ctx.Reply("unexpected error saving player details: %s", evt)
+		ctx.ReplyErr(err, "unexpected error saving player details")
 		return framework.MIDDLEWARE_RESPONSE_ERR
 	}
 

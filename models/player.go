@@ -9,14 +9,16 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/getsentry/sentry-go"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // Player stores information regarding the discord user, and the osu user
 type Player struct {
-	Discord discordgo.User `json:"discord" bson:"discord"`
-	Osu     osuapi.User    `json:"osu" bson:"osu"`
-	Farm    Farmerdog      `json:"farm" bson:"farm"`
+	ID      primitive.ObjectID `json:"_id" bson:"_id"`
+	Discord discordgo.User     `json:"discord" bson:"discord"`
+	Osu     osuapi.User        `json:"osu" bson:"osu"`
+	Farm    Farmerdog          `json:"farm" bson:"farm"`
 }
 
 // Farmerdog is how much of a farmerdog the player is

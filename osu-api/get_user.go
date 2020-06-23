@@ -43,7 +43,9 @@ type User struct {
 	Country     string    `json:"country"`
 	TimePlayed  int       `json:"total_seconds_played,string"`
 	CountryRank int       `json:"pp_country_rank,string"`
-	Events      []Event   `json:"events"`
+
+	// holy shit no one cares
+	//	Events      []Event   `json:"events"`
 }
 
 // Event is a notorious action a user has done recently.

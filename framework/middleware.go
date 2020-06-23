@@ -1,6 +1,8 @@
 package framework
 
 import (
+	"fmt"
+	"reflect"
 	"regexp"
 
 	"github.com/bwmarrin/discordgo"
@@ -49,10 +51,44 @@ type _Wrap struct {
 func Wrap(inner Middleware, regex string) _Wrap {
 	regexp := regexp.MustCompile(regex)
 	w := _Wrap{Middleware: inner, regex: regexp}
-	if cmd, ok := inner.(Command); ok {
-		w.helpFunc = cmd.Help
+
+	// look for a Help function
+	if m, ok := lookForHelpFunc(reflect.ValueOf(inner), reflect.TypeOf(inner)); ok {
+		fmt.Println("it's valid")
+		w.helpFunc = m
 	}
 	return w
+}
+
+func lookForHelpFunc(val reflect.Value, ty reflect.Type) (func(*discordgo.MessageEmbed), bool) {
+	// if it's an interface, unwrap
+	for val.Kind() == reflect.Interface {
+		val = val.Elem()
+		ty = val.Type()
+	}
+
+	if m, ok := ty.MethodByName("Help"); ok {
+		return func(embed *discordgo.MessageEmbed) {
+			m.Func.Call([]reflect.Value{
+				val,
+				reflect.ValueOf(embed),
+			})
+		}, true
+	}
+
+	// if it's a struct
+	if ty.Kind() == reflect.Struct {
+		// try going over the fields
+		for i := 0; i < ty.NumField(); i++ {
+			field := val.Field(i)
+			fieldTy := ty.Field(i)
+			if fieldTy.Anonymous {
+				return lookForHelpFunc(field, fieldTy.Type)
+			}
+		}
+	}
+
+	return func(*discordgo.MessageEmbed) {}, false
 }
 
 func (w _Wrap) Help(embed *discordgo.MessageEmbed) {

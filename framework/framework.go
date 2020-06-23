@@ -2,6 +2,7 @@ package framework
 
 import (
 	"context"
+	"fmt"
 	admincommands "maquiaBot/handlers/admin-commands"
 	"maquiaBot/models"
 	osuapi "maquiaBot/osu-api"
@@ -66,19 +67,40 @@ func (f *Framework) handleMessageCreate(s *discordgo.Session, m *discordgo.Messa
 		// get the server prefix
 		server, err := f.getServer(m.GuildID)
 		if err != nil {
-			sentry.CaptureException(err)
-			s.ChannelMessageSend(m.ChannelID, "couldn't retrieve server")
+			evt := sentry.CaptureException(err)
+			s.ChannelMessageSend(m.ChannelID, "couldn't retrieve server: "+string(*evt))
 			return
 		}
 
 		if strings.HasPrefix(m.Content, server.Prefix) {
 			restOfMessage := strings.TrimPrefix(m.Content, server.Prefix)
 
+			// are we asking for help?
+			help := false
+			if strings.HasPrefix(restOfMessage, "help") {
+				restOfMessage = strings.TrimPrefix(restOfMessage, "help")
+				restOfMessage = strings.TrimLeft(restOfMessage, " \t")
+				help = true
+			}
+
 			// now loop through all the commands
 			for _, command := range f.commands {
 				regex := command.Regex()
 
 				if regex.Match([]byte(restOfMessage)) {
+					// are we looking for help?
+					if help {
+						embed := &discordgo.MessageEmbed{
+							Author: &discordgo.MessageEmbedAuthor{},
+						}
+						command.Help(embed)
+						fmt.Println("embed", embed)
+
+						// TODO: handle this
+						s.ChannelMessageSendEmbed(m.ChannelID, embed)
+						break
+					}
+
 					// set up the context
 					ctx := CommandContext{
 						S:  s,
@@ -88,8 +110,9 @@ func (f *Framework) handleMessageCreate(s *discordgo.Session, m *discordgo.Messa
 						Servers: f.serverCollection,
 						Farm:    f.farmCollection,
 
-						Osu: f.osu,
-						Any: make(map[string]interface{}),
+						Server: server,
+						Osu:    f.osu,
+						Any:    make(map[string]interface{}),
 					}
 
 					// call the function
@@ -109,12 +132,14 @@ func (f *Framework) handleMessageCreate(s *discordgo.Session, m *discordgo.Messa
 
 func (f *Framework) getServer(guildID string) (*models.Server, error) {
 	var server models.Server
+	fmt.Println("looking up server", guildID)
 	err := f.serverCollection.
-		FindOne(context.TODO(), bson.M{"_id": guildID}).
+		FindOne(context.TODO(), bson.M{"server_id": guildID}).
 		Decode(&server)
 
 	// no results
 	if err == mongo.ErrNoDocuments {
+		fmt.Println("no documents found")
 		server := models.DefaultServerData(guildID)
 		// write this to the server
 		_, err := f.serverCollection.InsertOne(context.TODO(), server)

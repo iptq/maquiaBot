@@ -2,12 +2,14 @@ package models
 
 import (
 	"github.com/bwmarrin/discordgo"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Server stores information regarding the discord server, so that server specific customizations may be used.
 type Server struct {
-	ServerID         string `json:"id" bson:"_id"`
-	Prefix           string `json:"prefix" bson:"prefix"`
+	ID               primitive.ObjectID `json:"_id,omitempty" bson:"_id"`
+	ServerID         string             `json:"server_id" bson:"server_id"`
+	Prefix           string             `json:"prefix" bson:"prefix"`
 	Daily            bool
 	OsuToggle        bool
 	Vibe             bool `json:"vibe_enabled" bson:"vibe_enabled"` // Is vibe enabled
@@ -38,6 +40,7 @@ type Trigger struct {
 
 func DefaultServerData(guildID string) *Server {
 	return &Server{
+		ID:       primitive.NewObjectID(),
 		ServerID: guildID,
 		Prefix:   "$",
 	}

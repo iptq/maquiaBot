@@ -64,6 +64,7 @@ func main() {
 		logging.Fatal(err, "couldn't ping mongodb server")
 	}
 	db := client.Database(config.Conf.MongoDb)
+	defer db.Client().Disconnect(context.TODO())
 	log.Println("connected to mongodb")
 
 	// Create data folders and stuff

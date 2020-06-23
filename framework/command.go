@@ -2,10 +2,12 @@ package framework
 
 import (
 	"fmt"
+	"maquiaBot/models"
 	osuapi "maquiaBot/osu-api"
 	"regexp"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/getsentry/sentry-go"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -28,12 +30,21 @@ type CommandContext struct {
 	Servers *mongo.Collection
 	Farm    *mongo.Collection
 
-	Osu *osuapi.Client
-	Any map[string]interface{}
+	Server *models.Server
+	Osu    *osuapi.Client
+	Any    map[string]interface{}
 }
 
 // Shortcut function for sending a reply to the original sender
 func (c *CommandContext) Reply(format string, params ...interface{}) (*discordgo.Message, error) {
 	message := fmt.Sprintf(format, params...)
+	return c.S.ChannelMessageSend(c.MC.ChannelID, message)
+}
+
+// Shortcut function for sending a reply to the original sender with an error
+func (c *CommandContext) ReplyErr(err error, format string, params ...interface{}) (*discordgo.Message, error) {
+	evt := sentry.CaptureException(err)
+	message := fmt.Sprintf(format, params...)
+	message = fmt.Sprintf("%s (error id: %+v)", message, *evt)
 	return c.S.ChannelMessageSend(c.MC.ChannelID, message)
 }
