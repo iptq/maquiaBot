@@ -39,6 +39,10 @@ type Score struct {
 	Replay    OsuBool   `json:"replay_available,string"`
 }
 
+func (s Score) GetDate() string {
+	return s.Date.String()
+}
+
 // GSScore is basically Score, with the exception it also has ScoreID.
 // (stands for Get Scores Score)
 type GSScore struct {

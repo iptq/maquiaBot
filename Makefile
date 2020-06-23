@@ -10,7 +10,7 @@ checkFmt:
 	[ -z "$$(git ls-files | grep '\.go$$' | xargs gofmt -l)" ] || (exit 1)
 
 watch:
-	watchexec "go build"
+	watchexec "bash -c 'go build |& tee >(wc -l)'"
 
 clean:
 	rm -f maquiaBot

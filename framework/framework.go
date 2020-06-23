@@ -3,9 +3,6 @@ package framework
 import (
 	"context"
 	"fmt"
-	admincommands "maquiaBot/handlers/admin-commands"
-	"maquiaBot/models"
-	osuapi "maquiaBot/osu-api"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
@@ -13,11 +10,17 @@ import (
 	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+
+	"maquiaBot/config"
+	admincommands "maquiaBot/handlers/admin-commands"
+	"maquiaBot/models"
+	osuapi "maquiaBot/osu-api"
 )
 
 type Framework struct {
-	db  *mongo.Database
-	osu *osuapi.Client
+	config *config.Config
+	db     *mongo.Database
+	osu    *osuapi.Client
 
 	discord  *discordgo.Session // Discord session
 	commands map[string]Command // List of commands
@@ -30,8 +33,9 @@ type Framework struct {
 	AfterAllCommands  func(*discordgo.Session, *discordgo.MessageCreate, interface{})
 }
 
-func NewFramework(db *mongo.Database, osu *osuapi.Client, discord *discordgo.Session) *Framework {
+func NewFramework(config *config.Config, db *mongo.Database, osu *osuapi.Client, discord *discordgo.Session) *Framework {
 	framework := &Framework{
+		config:   config,
 		db:       db,
 		osu:      osu,
 		discord:  discord,
@@ -84,19 +88,16 @@ func (f *Framework) handleMessageCreate(s *discordgo.Session, m *discordgo.Messa
 			}
 
 			// now loop through all the commands
+			found := false
+			embed := f.defaultHelpEmbed(s)
 			for _, command := range f.commands {
 				regex := command.Regex()
 
 				if regex.Match([]byte(restOfMessage)) {
+					found = true
+
 					// are we looking for help?
 					if help {
-						embed := &discordgo.MessageEmbed{
-							Author: &discordgo.MessageEmbedAuthor{
-								URL:     "https://discordapp.com/oauth2/authorize?&client_id=" + s.State.User.ID + "&scope=bot&permissions=0",
-								Name:    "Click here to invite MaquiaBot!",
-								IconURL: s.State.User.AvatarURL("2048"),
-							},
-						}
 						command.Help(embed)
 						fmt.Println("embed", embed)
 
@@ -124,6 +125,11 @@ func (f *Framework) handleMessageCreate(s *discordgo.Session, m *discordgo.Messa
 
 					break
 				}
+			}
+
+			if !found {
+				// print generic help
+				s.ChannelMessageSendEmbed(m.ChannelID, embed)
 			}
 		}
 	}
@@ -160,4 +166,14 @@ func (f *Framework) getServer(guildID string) (*models.Server, error) {
 
 	// found the right doc
 	return &server, nil
+}
+
+func (f *Framework) defaultHelpEmbed(s *discordgo.Session) *discordgo.MessageEmbed {
+	return &discordgo.MessageEmbed{
+		Author: &discordgo.MessageEmbedAuthor{
+			URL:     "https://discordapp.com/oauth2/authorize?&client_id=" + s.State.User.ID + "&scope=bot&permissions=0",
+			Name:    "Click here to invite " + f.config.BotName + "!",
+			IconURL: s.State.User.AvatarURL("2048"),
+		},
+	}
 }

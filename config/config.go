@@ -11,6 +11,7 @@ var Conf Config
 
 // Config is the main part of the config
 type Config struct {
+	BotName      string
 	BotHoster    BotHoster
 	Database     Database
 	Twitch       Twitch

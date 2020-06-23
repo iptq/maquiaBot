@@ -45,6 +45,9 @@ func (c *CommandContext) Reply(format string, params ...interface{}) (*discordgo
 
 // Shortcut function for sending a reply to the original sender with an error
 func (c *CommandContext) ReplyErr(err error, format string, params ...interface{}) (*discordgo.Message, error) {
+	if err == nil {
+		return c.Reply(format, params...)
+	}
 	evt := sentry.CaptureException(err)
 	message := fmt.Sprintf(format, params...)
 	message = fmt.Sprintf("%s (error id: %+v)", message, *evt)

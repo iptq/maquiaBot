@@ -22,14 +22,14 @@ import (
 )
 
 var (
-	profileRegex     = regexp.MustCompile(`(?i)(osu|old)\.ppy\.sh\/(u|users)\/(\S+)`)
-	beatmapRegex     = regexp.MustCompile(`(?i)(osu|old)\.ppy\.sh\/(s|b|beatmaps|beatmapsets)\/(\d+)(#(osu|taiko|fruits|mania)\/(\d+))?`)
-	profileCmd1Regex = regexp.MustCompile(`(?i)osu(top|detail)?\s+(.+)`)
-	profileCmd2Regex = regexp.MustCompile(`(?i)profile\s+(.+)`)
-	profileCmd3Regex = regexp.MustCompile(`(?i)osutop`)
-	profileCmd4Regex = regexp.MustCompile(`(?i)osudetail`)
-	modeRegex        = regexp.MustCompile(`(?i)-m\s+(.+)`)
-	recentRegex      = regexp.MustCompile(`(?i)-r(ecent)?`)
+	profileRegex       = regexp.MustCompile(`(?i)(osu|old)\.ppy\.sh\/(u|users)\/(\S+)`)
+	beatmapRegex       = regexp.MustCompile(`(?i)(osu|old)\.ppy\.sh\/(s|b|beatmaps|beatmapsets)\/(\d+)(#(osu|taiko|fruits|mania)\/(\d+))?`)
+	profileCmd1Regex   = regexp.MustCompile(`(?i)osu(top|detail)?\s+(.+)`)
+	profileCmd2Regex   = regexp.MustCompile(`(?i)profile\s+(.+)`)
+	profileCmd3Regex   = regexp.MustCompile(`(?i)osutop`)
+	profileCmd4Regex   = regexp.MustCompile(`(?i)osudetail`)
+	modeRegex          = regexp.MustCompile(`(?i)-m\s+(.+)`)
+	profileRecentRegex = regexp.MustCompile(`(?i)-r(ecent)?`)
 )
 
 type _Profile struct {
@@ -95,8 +95,8 @@ func (m _Profile) Handle(ctx *framework.CommandContext) int {
 		value = profileCmd1Regex.FindStringSubmatch(content)[2]
 	}
 
-	if recentRegex.MatchString(content) {
-		value = strings.TrimSpace(strings.Replace(value, recentRegex.FindStringSubmatch(content)[0], "", -1))
+	if profileRecentRegex.MatchString(content) {
+		value = strings.TrimSpace(strings.Replace(value, profileRecentRegex.FindStringSubmatch(content)[0], "", -1))
 	}
 	value = strings.TrimSpace(strings.Replace(value, mValue, "", -1))
 
@@ -186,7 +186,7 @@ func (m _Profile) Handle(ctx *framework.CommandContext) int {
 		}
 
 		userRecent := userBest
-		if recentRegex.MatchString(content) {
+		if profileRecentRegex.MatchString(content) {
 			// Sort scores by date and get score
 			sort.Slice(userRecent, func(i, j int) bool {
 				time1, err := time.Parse("2006-01-02 15:04:05", userRecent[i].Date.String())
@@ -212,7 +212,7 @@ func (m _Profile) Handle(ctx *framework.CommandContext) int {
 		var mapList []*discordgo.MessageEmbedField
 		for i := 0; i < amount; i++ {
 			score := userBest[i]
-			if recentRegex.MatchString(content) {
+			if profileRecentRegex.MatchString(content) {
 				score = userRecent[i]
 			}
 
@@ -303,7 +303,7 @@ func (m _Profile) Handle(ctx *framework.CommandContext) int {
 					pp + hits + "\n" +
 					scoreTime,
 			}
-			if recentRegex.MatchString(content) {
+			if profileRecentRegex.MatchString(content) {
 				// Sort userBest back to original
 				sort.Slice(userBest, func(i, j int) bool { return userBest[i].PP > userBest[j].PP })
 				for j, bestScore := range userBest {

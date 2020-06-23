@@ -26,6 +26,10 @@ type GUSScore struct {
 	Score
 }
 
+func (s GUSScore) GetDate() string {
+	return s.Date.String()
+}
+
 func (o GetUserScoresOpts) toValues() url.Values {
 	vals := url.Values{}
 	switch {

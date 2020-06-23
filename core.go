@@ -127,15 +127,16 @@ func main() {
 	}
 
 	// Initialize the framework for handling events
-	f := framework.NewFramework(db, osuAPI, discord)
+	f := framework.NewFramework(&config.Conf, db, osuAPI, discord)
 
 	// general commands
 	f.RegisterCommand("color", wrap(c.Color(), "^(color|colour)"))
 	f.RegisterCommand("info", wrap(chain(c.IsServerAdmin(false), c.Info()), "^info"))
 
 	// osu commands
-	f.RegisterCommand("set", wrap(chain(c.IsServerAdmin(false), c.Link()), "^(link|set)"))
 	f.RegisterCommand("profile", wrap(c.Profile(), "^(osu|profile)"))
+	f.RegisterCommand("recent", wrap(chain(c.Recent()), "^(r|rs|recent)"))
+	f.RegisterCommand("set", wrap(chain(c.IsServerAdmin(false), c.Link()), "^(link|set)"))
 
 	// Add handlers
 	// discord.AddHandler(handlers.MessageHandler)
