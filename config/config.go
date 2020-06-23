@@ -23,6 +23,9 @@ type Config struct {
 	Cheers       string
 	Late         string
 	OverIt       string
+	MongoHost    string
+	MongoDb      string
+	SentryDSN    string // Sentry DSN
 }
 
 // BotHoster holds info about who is hosting the bot (also known as Bot Creator)
@@ -52,10 +55,10 @@ type Twitter struct {
 	ConsumerSecret string
 }
 
-// NewConfig creates the new configuration from the JSON file
-func NewConfig() {
+// NewConfig reads the config from the specified path
+func NewConfig(path string) {
 	config := Config{}
-	f, err := ioutil.ReadFile("./config/config.json")
+	f, err := ioutil.ReadFile(path)
 	if err != nil {
 		log.Fatalln("Error obtaining config information: " + err.Error())
 	}

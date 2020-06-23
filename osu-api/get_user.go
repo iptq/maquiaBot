@@ -23,7 +23,7 @@ type GetUserOpts struct {
 // User is an osu! user.
 type User struct {
 	UserID      int       `json:"user_id,string"`
-	Username    string    `json:"username"`
+	Username    string    `json:"username" bson:"username"`
 	Date        MySQLDate `json:"join_date"`
 	Count300    int       `json:"count300,string"`
 	Count100    int       `json:"count100,string"`

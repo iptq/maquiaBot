@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -13,19 +15,57 @@ import (
 	"syscall"
 	"time"
 
+	"maquiaBot/commands"
 	config "maquiaBot/config"
-	handlers "maquiaBot/handlers"
+	"maquiaBot/framework"
 	gencommands "maquiaBot/handlers/general-commands"
 	osucommands "maquiaBot/handlers/osu-commands"
+	"maquiaBot/logging"
 	osuapi "maquiaBot/osu-api"
 	osutools "maquiaBot/osu-tools"
 	structs "maquiaBot/structs"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/getsentry/sentry-go"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 func main() {
+	// Open the config
+	config.NewConfig("config/config.json")
+
+	// Set up sentry logging
+	if len(config.Conf.SentryDSN) > 0 {
+		err := sentry.Init(sentry.ClientOptions{
+			Dsn:   config.Conf.SentryDSN,
+			Debug: true,
+		})
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed to initialize sentry: %+v\n", err)
+		}
+		defer sentry.Flush(2 * time.Second)
+	}
+
+	// Open connection to the database
+	log.Println("connecting to", config.Conf.MongoHost)
+	client, err := mongo.NewClient(options.Client().ApplyURI(config.Conf.MongoHost))
+	if err != nil {
+		logging.Fatal(err, "couldn't create mongodb client")
+	}
+	err = client.Connect(context.TODO())
+	if err != nil {
+		logging.Fatal(err, "couldn't connect to mongodb")
+	}
+	if err := client.Ping(context.TODO(), readpref.Primary()); err != nil {
+		// Can't connect to Mongo server
+		logging.Fatal(err, "couldn't ping mongodb server")
+	}
+	db := client.Database(config.Conf.MongoDb)
+	log.Println("connected to mongodb")
+
 	// Create data folders and stuff
 	if _, err := os.Stat("./data"); os.IsNotExist(err) {
 		err = os.MkdirAll("./data", 0755)
@@ -46,6 +86,10 @@ func main() {
 		readErr(err)
 		log.Println("Created data/channelData directory.")
 
+		err = os.MkdirAll("./data/serverData", 0755)
+		readErr(err)
+		log.Println("Created data/serverData directory.")
+
 		err = os.MkdirAll("./data/osuData", 0755)
 		readErr(err)
 		log.Println("Created data/osuData directory.")
@@ -61,7 +105,6 @@ func main() {
 	}
 
 	// Obtain config
-	config.NewConfig()
 	osuAPI := osuapi.NewClient(config.Conf.OsuToken)
 	osucommands.OsuAPI = osuAPI
 	osutools.OsuAPI = osuAPI
@@ -71,11 +114,15 @@ func main() {
 	// Handle farm data
 	go osutools.FarmUpdate(discord)
 
+	// Initialize the framework for handling events
+	f := framework.NewFramework(db, osuAPI, discord)
+	f.RegisterCommand("set", framework.Wrap(framework.Chain(commands.IsServerAdmin(false), commands.Link()), "^(link|set)"))
+
 	// Add handlers
-	discord.AddHandler(handlers.MessageHandler)
-	discord.AddHandler(handlers.ReactAdd)
-	discord.AddHandler(handlers.ServerJoin)
-	discord.AddHandler(handlers.ServerLeave)
+	// discord.AddHandler(handlers.MessageHandler)
+	// discord.AddHandler(handlers.ReactAdd)
+	// discord.AddHandler(handlers.ServerJoin)
+	// discord.AddHandler(handlers.ServerLeave)
 
 	// Open a websocket connection to Discord and begin listening
 	for {
