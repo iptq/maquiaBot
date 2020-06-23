@@ -10,13 +10,12 @@ import (
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/getsentry/sentry-go"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 var (
-	usernameRegex = regexp.MustCompile(`(?i)(.+)(link|set)(\s+<@\S+)?(\s+.+)?`)
+	usernameRegex = regexp.MustCompile(`(?i)([^ls]+)(link|set)(\s+<@\S+)?(\s+.+)?`)
 )
 
 type _Link struct{}
@@ -64,8 +63,8 @@ func (m _Link) Handle(ctx *framework.CommandContext) int {
 	// Find the user corresponding to the requesting dicord user
 	var player models.Player
 	err := ctx.Players.
-		FindOne(context.TODO(), bson.D{
-			{"discord.id", discordUser.ID},
+		FindOne(context.TODO(), bson.M{
+			"discord.id": discordUser.ID,
 		}).
 		Decode(&player)
 
@@ -76,7 +75,7 @@ func (m _Link) Handle(ctx *framework.CommandContext) int {
 			Username: osuUsername,
 		})
 		if err != nil {
-			ctx.Reply("Player: **%s** may not exist!", osuUsername)
+			ctx.ReplyErr(err, "Player: **%s** may not exist!", osuUsername)
 			return framework.MIDDLEWARE_RESPONSE_ERR
 		}
 		osuUsername = user.Username
@@ -106,8 +105,7 @@ func (m _Link) Handle(ctx *framework.CommandContext) int {
 
 	// some other error
 	if err != nil {
-		ctx.Reply("unexpected error")
-		sentry.CaptureException(err)
+		ctx.ReplyErr(err, "unexpected error")
 		return framework.MIDDLEWARE_RESPONSE_ERR
 	}
 
@@ -121,11 +119,12 @@ func (m _Link) Handle(ctx *framework.CommandContext) int {
 		return framework.MIDDLEWARE_RESPONSE_OK
 	}
 
+	fmt.Println("OSUUSERNAME", osuUsername)
 	user, err := ctx.Osu.GetUser(osuapi.GetUserOpts{
 		Username: osuUsername,
 	})
 	if err != nil {
-		ctx.Reply("Player: **%s** may not exist!", osuUsername)
+		ctx.ReplyErr(err, "Player: **%s** may not exist!", osuUsername)
 		return framework.MIDDLEWARE_RESPONSE_ERR
 	}
 	fmt.Printf("NEW USER: %+v\n", user)
