@@ -1,6 +1,7 @@
 package framework
 
 import (
+	"context"
 	"fmt"
 	"maquiaBot/models"
 	osuapi "maquiaBot/osu-api"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/getsentry/sentry-go"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -47,4 +49,21 @@ func (c *CommandContext) ReplyErr(err error, format string, params ...interface{
 	message := fmt.Sprintf(format, params...)
 	message = fmt.Sprintf("%s (error id: %+v)", message, *evt)
 	return c.S.ChannelMessageSend(c.MC.ChannelID, message)
+}
+
+// Send the error
+func (c *CommandContext) SendErr(err error) {
+	sentry.CaptureException(err)
+}
+
+// Get osu! information associated of author
+func (c *CommandContext) GetOsuProfile() (models.Player, error) {
+	var player models.Player
+	err := c.Players.FindOne(context.TODO(), bson.M{
+		"discord.id": c.MC.Author.ID,
+	}).Decode(&player)
+	if err != nil {
+		return models.Player{}, err
+	}
+	return player, nil
 }

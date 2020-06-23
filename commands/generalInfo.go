@@ -1,16 +1,13 @@
 package commands
 
 import (
-	"context"
 	"maquiaBot/framework"
-	"maquiaBot/models"
 	"regexp"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -130,14 +127,10 @@ func (m _Info) Handle(ctx *framework.CommandContext) int {
 
 	// Obtain osu! info
 	osuUsername := "N/A"
-	var player models.Player
-	err = ctx.Players.FindOne(context.TODO(), bson.M{
-		"discord.id": user.ID,
-	}).Decode(&player)
+	player, err := ctx.GetOsuProfile()
 	if err != nil && err != mongo.ErrNoDocuments {
 		ctx.ReplyErr(err, "couldn't retrieve discord user info")
-	}
-	if len(player.Osu.Username) > 0 {
+	} else {
 		osuUsername = player.Osu.Username
 	}
 
