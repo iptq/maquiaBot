@@ -18,13 +18,13 @@ var (
 	usernameRegex = regexp.MustCompile(`(?i)(.+)(link|set)(\s+<@\S+)?(\s+.+)?`)
 )
 
-type LinkT struct{}
+type _Link struct{}
 
-func Link() LinkT {
-	return LinkT{}
+func Link() _Link {
+	return _Link{}
 }
 
-func (m LinkT) Help(embed *discordgo.MessageEmbed) {
+func (m _Link) Help(embed *discordgo.MessageEmbed) {
 	embed.Author.Name = "Command: link / set"
 	embed.Description = "`[osu] (link|set) [@mention] <osu! username>` lets you link an osu! account with the username given to your discord account."
 	embed.Fields = []*discordgo.MessageEmbedField{
@@ -41,7 +41,7 @@ func (m LinkT) Help(embed *discordgo.MessageEmbed) {
 	}
 }
 
-func (m LinkT) Handle(ctx *framework.CommandContext) int {
+func (m _Link) Handle(ctx *framework.CommandContext) int {
 	discordUser := ctx.MC.Author
 	osuUsername := strings.TrimSpace(usernameRegex.FindStringSubmatch(ctx.MC.Content)[4])
 
@@ -68,29 +68,6 @@ func (m LinkT) Handle(ctx *framework.CommandContext) int {
 
 	// no players found
 	if err == mongo.ErrNoDocuments {
-		// Run through the player cache to find the user using the osu! username if no discord ID exists.
-		// TODO: don't ignore this case
-		// for i, player := range cache {
-		// 	if strings.ToLower(player.Osu.Username) == strings.ToLower(osuUsername) && player.Discord.ID == "" {
-		// 		player.Discord = *discordUser
-		// 		player.FarmCalc(ctx.Osu, ctx.Farm)
-		// 		cache[i] = player
-
-		// 		jsonCache, err := json.Marshal(cache)
-		// 		tools.ErrRead(s, err)
-
-		// 		err = ioutil.WriteFile("./data/osuData/profileCache.json", jsonCache, 0644)
-		// 		tools.ErrRead(s, err)
-
-		// 		if len(ctx.MC.Mentions) >= 1 {
-		// 			ctx.Reply("osu! account **%s** has been linked to %s's account!", osuUsername, discordUser.Username)
-		// 		} else {
-		// 			ctx.Reply("osu! account **%s** has been linked to your discord account!", osuUsername)
-		// 		}
-		// 		return framework.MIDDLEWARE_RESPONSE_OK
-		// 	}
-		// }
-
 		// Create player
 		user, err := ctx.Osu.GetUser(osuapi.GetUserOpts{
 			Username: osuUsername,
@@ -115,13 +92,6 @@ func (m LinkT) Handle(ctx *framework.CommandContext) int {
 			return framework.MIDDLEWARE_RESPONSE_ERR
 		}
 
-		// cache = append(cache, player)
-		// jsonCache, err := json.Marshal(cache)
-		// tools.ErrRead(s, err)
-
-		// err = ioutil.WriteFile("./data/osuData/profileCache.json", jsonCache, 0644)
-		// tools.ErrRead(s, err)
-
 		if len(ctx.MC.Mentions) >= 1 {
 			ctx.Reply("osu! account **%s** has been linked to %s's account!", osuUsername, discordUser.Username)
 			return framework.MIDDLEWARE_RESPONSE_OK
@@ -129,7 +99,6 @@ func (m LinkT) Handle(ctx *framework.CommandContext) int {
 
 		ctx.Reply("osu! account **%s** has been linked to your discord account!", osuUsername)
 		return framework.MIDDLEWARE_RESPONSE_OK
-
 	}
 
 	// some other error
@@ -166,27 +135,6 @@ func (m LinkT) Handle(ctx *framework.CommandContext) int {
 		ctx.Reply("unexpected error saving player details: %s", evt)
 		return framework.MIDDLEWARE_RESPONSE_ERR
 	}
-
-	// Remove any accounts of the same user or empty osu! user and with no discord linked
-	ctx.Players.DeleteMany(context.TODO(), bson.D{
-		{"discord_id", player.Discord.ID},
-		{"$or", []interface{}{
-			bson.D{{"osu.username", ""}},
-			// TODO: get the case-insensitive version back in here
-		}},
-	})
-	// for j := 0; j < len(cache); j++ {
-	// 	if player.Discord.ID == "" && (cache[j].Osu.Username == "" || strings.ToLower(cache[j].Osu.Username) == strings.ToLower(osuUsername)) {
-	// 		cache = append(cache[:j], cache[j+1:]...)
-	// 		j--
-	// 	}
-	// }
-
-	// jsonCache, err := json.Marshal(cache)
-	// tools.ErrRead(s, err)
-
-	// err = ioutil.WriteFile("./data/osuData/profileCache.json", jsonCache, 0644)
-	// tools.ErrRead(s, err)
 
 	if len(ctx.MC.Mentions) >= 1 {
 		ctx.Reply("osu! account **%s** has been linked to %s's account!", osuUsername, discordUser.Username)

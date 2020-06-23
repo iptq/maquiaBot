@@ -17,16 +17,16 @@ type Middleware interface {
 	Handle(*CommandContext) int
 }
 
-type ChainT struct {
+type _Chain struct {
 	Middleware
 	inner Middleware
 }
 
-func Chain(inner Middleware, next Middleware) ChainT {
-	return ChainT{Middleware: next, inner: inner}
+func Chain(inner Middleware, next Middleware) _Chain {
+	return _Chain{Middleware: next, inner: inner}
 }
 
-func (c ChainT) Handle(ctx *CommandContext) int {
+func (c _Chain) Handle(ctx *CommandContext) int {
 	res := c.inner.Handle(ctx)
 	switch res {
 	case MIDDLEWARE_RESPONSE_OK:
@@ -40,22 +40,22 @@ func (c ChainT) Handle(ctx *CommandContext) int {
 	}
 }
 
-type WrapT struct {
+type _Wrap struct {
 	Middleware
 	regex    *regexp.Regexp
 	helpFunc func(*discordgo.MessageEmbed)
 }
 
-func Wrap(inner Middleware, regex string) WrapT {
+func Wrap(inner Middleware, regex string) _Wrap {
 	regexp := regexp.MustCompile(regex)
-	w := WrapT{Middleware: inner, regex: regexp}
+	w := _Wrap{Middleware: inner, regex: regexp}
 	if cmd, ok := inner.(Command); ok {
 		w.helpFunc = cmd.Help
 	}
 	return w
 }
 
-func (w WrapT) Help(embed *discordgo.MessageEmbed) {
+func (w _Wrap) Help(embed *discordgo.MessageEmbed) {
 	if w.helpFunc != nil {
 		w.helpFunc(embed)
 	} else {
@@ -63,10 +63,10 @@ func (w WrapT) Help(embed *discordgo.MessageEmbed) {
 	}
 }
 
-func (w WrapT) Regex() *regexp.Regexp {
+func (w _Wrap) Regex() *regexp.Regexp {
 	return w.regex
 }
 
-func (w WrapT) Handle(ctx *CommandContext) int {
+func (w _Wrap) Handle(ctx *CommandContext) int {
 	return w.Middleware.Handle(ctx)
 }

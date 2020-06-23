@@ -8,15 +8,15 @@ import (
 	"github.com/getsentry/sentry-go"
 )
 
-type InServerT struct {
+type _InServer struct {
 	required bool
 }
 
-func InServer(required bool) InServerT {
-	return InServerT{required}
+func InServer(required bool) _InServer {
+	return _InServer{required}
 }
 
-func (m InServerT) Handle(ctx *framework.CommandContext) int {
+func (m _InServer) Handle(ctx *framework.CommandContext) int {
 	inServer := len(ctx.MC.GuildID) == 0
 
 	if m.required && !inServer {
@@ -28,15 +28,15 @@ func (m InServerT) Handle(ctx *framework.CommandContext) int {
 	}
 }
 
-type IsServerAdminT struct {
+type _IsServerAdmin struct {
 	required bool
 }
 
-func IsServerAdmin(required bool) IsServerAdminT {
-	return IsServerAdminT{required}
+func IsServerAdmin(required bool) _IsServerAdmin {
+	return _IsServerAdmin{required}
 }
 
-func (m IsServerAdminT) Handle(ctx *framework.CommandContext) int {
+func (m _IsServerAdmin) Handle(ctx *framework.CommandContext) int {
 	isServerAdmin := false
 
 	// get guild info
