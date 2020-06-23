@@ -48,7 +48,13 @@ func (c *CommandContext) ReplyErr(err error, format string, params ...interface{
 	if err == nil {
 		return c.Reply(format, params...)
 	}
-	evt := sentry.CaptureException(err)
+	var evt *sentry.EventID
+	sentry.WithScope(func(scope *sentry.Scope) {
+		scope.SetUser(sentry.User{
+			ID: c.MC.Author.ID,
+		})
+		evt = sentry.CaptureException(err)
+	})
 	message := fmt.Sprintf(format, params...)
 	message = fmt.Sprintf("%s (error id: %+v)", message, *evt)
 	return c.S.ChannelMessageSend(c.MC.ChannelID, message)
