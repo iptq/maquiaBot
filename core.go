@@ -136,7 +136,7 @@ func main() {
 	// osu commands
 	f.RegisterCommand("profile", wrap(c.Profile(), "^(osu|profile)"))
 	f.RegisterCommand("recentBest", wrap(chain(c.RecentBest()), "^(rb|recentb|recentbest)"))
-	f.RegisterCommand("recent", wrap(chain(c.Recent()), "^(r|rs|recent)"))
+	f.RegisterCommand("recent", wrap(chain(c.Recent()), "^(r[^b]|rs|recent)"))
 	f.RegisterCommand("set", wrap(chain(c.IsServerAdmin(false), c.Link()), "^(link|set)"))
 
 	// Add handlers

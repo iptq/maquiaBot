@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"image/png"
 	"io/ioutil"
-	"log"
 	"maquiaBot/framework"
 	osuapi "maquiaBot/osu-api"
 	osutools "maquiaBot/osu-tools"
@@ -454,8 +453,8 @@ func ScorePost(ctx *framework.CommandContext, postType string, params ...string)
 
 	img, err := osutools.ResultImage(score, beatmap, user, replayData)
 	if err != nil {
-		ctx.S.ChannelMessageSend(ctx.MC.ChannelID, "Failed to create scorepost image! Let VINXIS know.")
-		log.Println(err)
+		ctx.ReplyErr(err, "Failed to create scorepost image")
+		return
 	} else {
 		imgBytes := new(bytes.Buffer)
 		_ = png.Encode(imgBytes, img)
