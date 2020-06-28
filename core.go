@@ -134,6 +134,7 @@ func main() {
 	f.RegisterCommand("info", wrap(chain(c.IsServerAdmin(false), c.Info()), "^info"))
 
 	// osu commands
+	f.RegisterCommand("compare", wrap(c.Compare(), "^(c[^o]|compare)"))
 	f.RegisterCommand("profile", wrap(c.Profile(), "^(osu|profile)"))
 	f.RegisterCommand("recentBest", wrap(chain(c.RecentBest()), "^(rb|recentb|recentbest)"))
 	f.RegisterCommand("recent", wrap(chain(c.Recent()), "^(r[^b]|rs|recent)"))

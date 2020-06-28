@@ -2,7 +2,6 @@ package commands
 
 import (
 	"context"
-	"fmt"
 	"maquiaBot/framework"
 	"maquiaBot/models"
 	osuapi "maquiaBot/osu-api"
@@ -121,7 +120,6 @@ func (m _Link) Handle(ctx *framework.CommandContext) int {
 		return framework.MIDDLEWARE_RESPONSE_OK
 	}
 
-	fmt.Println("OSUUSERNAME", osuUsername)
 	user, err := ctx.Osu.GetUser(osuapi.GetUserOpts{
 		Username: osuUsername,
 	})
@@ -129,16 +127,11 @@ func (m _Link) Handle(ctx *framework.CommandContext) int {
 		ctx.ReplyErr(err, "Player: **%s** may not exist!", osuUsername)
 		return framework.MIDDLEWARE_RESPONSE_ERR
 	}
-	fmt.Printf("NEW USER: %+v\n", user)
 	osuUsername = user.Username
 	player.Osu = *user
 	player.FarmCalc(ctx.Osu, ctx.Farm)
 
 	// commit player back to mongo
-	upd := bson.M{"$set": player}
-	upds, _ := bson.MarshalExtJSON(upd, true, false)
-	fmt.Printf("UPDATE: %+v\n", string(upds))
-
 	_, err = ctx.Players.ReplaceOne(
 		context.TODO(),
 		bson.M{"_id": player.ID},
