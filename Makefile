@@ -1,6 +1,6 @@
 all: maquiaBot
 
-maquiaBot:
+maquiaBot: $(shell find -name *.go -type f)
 	go build -v
 
 test:
