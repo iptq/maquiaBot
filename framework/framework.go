@@ -25,9 +25,10 @@ type Framework struct {
 	discord  *discordgo.Session // Discord session
 	commands map[string]Command // List of commands
 
-	playerCollection *mongo.Collection
-	serverCollection *mongo.Collection
-	farmCollection   *mongo.Collection
+	playerCollection   *mongo.Collection
+	serverCollection   *mongo.Collection
+	farmCollection     *mongo.Collection
+	reminderCollection *mongo.Collection
 
 	BeforeAllCommands func(*discordgo.Session, *discordgo.MessageCreate, interface{})
 	AfterAllCommands  func(*discordgo.Session, *discordgo.MessageCreate, interface{})
@@ -45,11 +46,21 @@ func NewFramework(config *config.Config, db *mongo.Database, osu *osuapi.Client,
 	framework.farmCollection = db.Collection("farm")
 	framework.playerCollection = db.Collection("players")
 	framework.serverCollection = db.Collection("servers")
+	framework.reminderCollection = db.Collection("reminder")
 
 	// attach handlers
 	discord.AddHandler(framework.handleMessageCreate)
 
+	// start timers
+
 	return framework
+}
+
+func (f *Framework) Cleanup() {
+	client := f.db.Client()
+	client.Disconnect(context.TODO())
+
+	f.discord.Close()
 }
 
 func (f *Framework) RegisterCommand(name string, command Command) {

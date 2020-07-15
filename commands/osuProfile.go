@@ -32,8 +32,7 @@ var (
 	profileRecentRegex = regexp.MustCompile(`(?i)-r(ecent)?`)
 )
 
-type _Profile struct {
-}
+type _Profile struct{}
 
 func Profile() _Profile {
 	return _Profile{}

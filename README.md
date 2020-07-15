@@ -1,7 +1,23 @@
-# maquiaBot
+maquiaBot
+=========
+
 Discord bot that does a bunch of osu! stuff PROPERLY (sooner or later)
 
-## Installation
+Refactor Progress
+-----------------
+
+Currently I'm refactoring the project to clean up some of the repetitive code and add more logging. Here's my progress:
+
+Commands:
+
+- general: `color` `info`
+- osu: `compare` `link` `profile` `recent`
+
+The refactored version requires a running copy of MongoDB.
+
+Installation
+------------
+
  1. [Install golang](https://golang.org/doc/install) and [Tesseract](https://github.com/UB-Mannheim/tesseract/wiki). Ideally you have Go version 1.13 or newer. 
  2. Clone the repository using `git clone https://github.com/VINXIS/maquiaBot.git` to wherever you want.
  3. Go to the folder and open a console. Install the dependencies with `go get`.

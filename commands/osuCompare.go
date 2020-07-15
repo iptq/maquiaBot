@@ -22,8 +22,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type _Compare struct {
-}
+type _Compare struct{}
 
 func Compare() _Compare {
 	return _Compare{}

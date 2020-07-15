@@ -15,8 +15,7 @@ var (
 	colorList  = "https://www.w3schools.com/colors/colors_names.asp"
 )
 
-type _Color struct {
-}
+type _Color struct{}
 
 func Color() _Color {
 	return _Color{}

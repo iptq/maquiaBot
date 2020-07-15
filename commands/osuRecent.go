@@ -32,8 +32,7 @@ var (
 	genOSR               = regexp.MustCompile(`(?i)-osr`)
 )
 
-type _Recent struct {
-}
+type _Recent struct{}
 
 func Recent() _Recent {
 	return _Recent{}

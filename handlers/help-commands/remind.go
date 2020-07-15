@@ -6,29 +6,6 @@ import (
 
 // Remind explains the remind functionality
 func Remind(embed *discordgo.MessageEmbed) *discordgo.MessageEmbed {
-	embed.Author.Name = "Command: remind / reminder"
-	embed.Description = "`(remind|reminder) [text] [in time]` reminds you in some amount of time."
-	embed.Fields = []*discordgo.MessageEmbedField{
-		{
-			Name:   "[text]",
-			Value:  "The text to remind you about. Not required.",
-			Inline: true,
-		},
-		{
-			Name:   "[in time]",
-			Value:  "The time until you want to be reminded.",
-			Inline: true,
-		},
-		{
-			Name:   "Example format:",
-			Value:  "`$remind play osu! in 5 hours` Will remind you about `play osu!` in 5 hours.",
-			Inline: true,
-		},
-		{
-			Name:  "Related Commands:",
-			Value: "`reminders`, `remindremove`",
-		},
-	}
 	return embed
 }
 

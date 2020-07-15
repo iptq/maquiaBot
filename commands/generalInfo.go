@@ -15,8 +15,7 @@ var (
 	userRegex = regexp.MustCompile(`(?i)info\s+(.+)`)
 )
 
-type _Info struct {
-}
+type _Info struct{}
 
 func Info() _Info {
 	return _Info{}

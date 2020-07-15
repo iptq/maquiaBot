@@ -210,8 +210,7 @@ func main() {
 	<-sc
 
 	// Close sessions
-	discord.Close()
-	// tools.DB.Close()
+	f.Cleanup()
 }
 
 func readErr(err error) {
